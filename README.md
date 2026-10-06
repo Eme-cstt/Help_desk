@@ -21,16 +21,6 @@ A aplicação foi criada para agilizar a notificação de falhas tecnológicas o
 - CSS3: Estilização responsiva, layout modular e tratamento visual para estados de seleção.
 - JavaScript (ES6+): Lógica do cliente, manipulação do DOM, gestão de eventos de clique e dinâmicas do modal.
 
-##  Estrutura do Projeto
-
-text
-- index.html       # Estrutura principal da página web
-- style.css        # Estilos, variáveis e responsividade
-─ script.js        # Lógica de interatividade e manipulação do DOM
-─ imagens/         # Recursos visuais e
-- logotipos
-    └── logo.png
-
 ## Desenvolvedores
 
 Emerson Castro — UniEnsino
