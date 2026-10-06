@@ -24,11 +24,11 @@ A aplicação foi criada para agilizar a notificação de falhas tecnológicas o
 ##  Estrutura do Projeto
 
 text
-├── index.html       # Estrutura principal da página web
-├── style.css        # Estilos, variáveis e responsividade
-├── script.js        # Lógica de interatividade e manipulação do DOM
-└── imagens/         # Recursos visuais e
-logotipos
+- index.html       # Estrutura principal da página web
+- style.css        # Estilos, variáveis e responsividade
+─ script.js        # Lógica de interatividade e manipulação do DOM
+─ imagens/         # Recursos visuais e
+- logotipos
     └── logo.png
 
 ## Desenvolvedores
