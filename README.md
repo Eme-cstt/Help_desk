@@ -61,7 +61,6 @@ Estrutura Geral do Projeto
 ├── server.mjs              # Servidor principal com rotas Express e API REST
 └── README.md               # Documentação do projeto
 
-Desenvolvedores
+Desenvolvedor
 
 Emerson Castro — UniEnsino
-Portfólio Pessoal | UniEnsino
