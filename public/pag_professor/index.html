@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Tela do Professor</title>
+    <link rel="stylesheet" href="/pag_professor/style.css">
+
+</head>
+
+
+<body>
+
+    <main class="container">
+
+
+        <!-- CABEÇALHO -->
+
+        <header class="header">
+
+            <div class="logo">
+
+                <img
+                    src="https://www.uniensinovirtual.com.br/assets/imgs/logo/logo.png"
+                    alt="Logo UniEnsino"
+                >
+
+            </div>
+
+
+            <h1>
+                SUPORTE AOS PROFESSORES UNIENSINO
+            </h1>
+
+        </header>
+
+
+
+        <!-- FORMULÁRIO -->
+
+        <section class="content">
+
+
+            <h2 class="question">
+
+                Qual problema você está enfrentando?
+
+            </h2>
+
+
+            <p class="instruction">
+
+                Selecione uma opção abaixo:
+
+            </p>
+
+
+
+            <!-- CATEGORIAS -->
+
+            <div class="categories">
+
+
+                <button
+                    type="button"
+                    class="category"
+                    data-category="Projetor"
+                >
+
+                    <span class="category-icon">
+                        📽️
+                    </span>
+
+                    <span>
+                        Projetor
+                    </span>
+
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="category"
+                    data-category="Computador"
+                >
+
+                    <span class="category-icon">
+                        💻
+                    </span>
+
+                    <span>
+                        Computador
+                    </span>
+
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="category"
+                    data-category="Internet"
+                >
+
+                    <span class="category-icon">
+                        🌐
+                    </span>
+
+                    <span>
+                        Internet
+                    </span>
+
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="category"
+                    data-category="Ar-condicionado"
+                >
+
+                    <span class="category-icon">
+                        ❄️
+                    </span>
+
+                    <span>
+                        Ar-condicionado
+                    </span>
+
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="category"
+                    data-category="Limpeza"
+                >
+
+                    <span class="category-icon">
+                        🧹
+                    </span>
+
+                    <span>
+                        Limpeza
+                    </span>
+
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="category"
+                    data-category="Outro"
+                >
+
+                    <span class="category-icon">
+                        •••
+                    </span>
+
+                    <span>
+                        Outro
+                    </span>
+
+                </button>
+
+
+            </div>
+
+
+
+            <!-- SALA -->
+
+            <div class="form-group">
+
+
+                <label for="sala">
+
+                    INFORME SUA SALA DE AULA
+
+                </label>
+
+
+                <textarea
+                    id="sala"
+                    placeholder="Ex: 12 - Digite aqui o número da sua sala"
+                    maxlength="10"
+                ></textarea>
+
+
+            </div>
+
+
+
+            <!-- PROFESSOR -->
+
+            <div class="form-group">
+
+
+                <label for="professor">
+
+                    INFORME SEU NOME
+
+                </label>
+
+
+                <textarea
+                    id="professor"
+                    placeholder="Ex: Professor Arthur - Digite aqui seu nome"
+                    maxlength="50"
+                ></textarea>
+
+
+            </div>
+
+
+
+            <!-- DESCRIÇÃO -->
+
+            <div class="form-group">
+
+
+                <label for="description">
+
+                    DESCREVA O PROBLEMA
+
+                </label>
+
+
+                <textarea
+                    id="description"
+                    placeholder="Ex.: O projetor não está ligando..."
+                    maxlength="500"
+                ></textarea>
+
+
+            </div>
+
+
+
+            <!-- BOTÃO  DE ENVIO -->
+
+            <button
+                type="button"
+                id="submitButton"
+                class="submit-button"
+            >
+
+                Abrir chamado
+
+            </button>
+
+
+        </section>
+
+
+
+        <!-- CONTATO -->
+
+        <section
+            id="contato"
+            class="secao-contato"
+        >
+
+            <span class="tag-mono">
+
+                PROBLEMA COM PROJETOR EM SALA DE AULA?
+
+            </span>
+
+
+            <h2 class="titulo-principal">
+
+                ENTRE EM
+                <span>
+                    CONTATO ATRAVÉS DO FORMULÁRIO
+                </span>
+
+            </h2>
+
+
+            <div class="info-contato">
+
+                <p>
+
+                    <strong>
+                        Desenvolvido por
+                    </strong>
+
+
+                    <a
+                        href="https://eme-cstt.github.io/Trabalho_Portifolio/"
+                        target="_blank"
+                    >
+                        Emerson Castro
+                    </a>
+
+
+                    e
+
+
+                    <a
+                        href="https://querouniensino.com.br/"
+                        target="_blank"
+                    >
+                        UniEnsino
+                    </a>
+
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- MENSAGEM DE CHAMADO ENVIADO -->
+
+    <div
+        id="successModal"
+        class="modal hidden"
+    >
+
+        <div class="modal-content">
+
+
+            <div class="success-icon">
+
+                ✓
+
+            </div>
+
+
+            <h2>
+
+                Chamado aberto!
+
+            </h2>
+
+
+            <p>
+
+                Sua solicitação foi enviada
+                para a equipe do apoio.
+
+            </p>
+
+
+            <div class="ticket-info">
+
+
+                <p>
+
+                    <strong>
+                        Categoria:
+                    </strong>
+
+                    <span id="modalCategory"></span>
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Problema:
+                    </strong>
+
+                    <span id="modalDescription"></span>
+
+                </p>
+
+
+            </div>
+
+
+            <button
+                type="button"
+                id="newTicketButton"
+                class="submit-button"
+            >
+
+                Novo chamado
+
+            </button>
+
+
+        </div>
+
+    </div>
+
+         <!-- JAVASCRIPT -->
+
+    <script
+        src="/pag_professor/script.js"
+    ></script>
+
+
+</body>
+
+</html>
