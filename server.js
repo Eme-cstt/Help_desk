@@ -6,7 +6,7 @@ const cors = require("cors");
 const app = express();
 
 // Render define as rotas
-// O servidor utilizará a porta 3000.
+// O servidor utilizará a porta 3000 ou a definida pelo ambiente.
 const PORT = process.env.PORT || 3000;
 
 // Caminhos do projeto
@@ -16,7 +16,7 @@ const imagesDirectory = path.join(publicDirectory, "imagens");
 const databaseDirectory = path.join(__dirname, "data_base");
 const databasePath = path.join(databaseDirectory, "chamados.json");
 
-// Middlewares(Ponte do projeto)
+// Middlewares (Ponte do projeto)
 app.use(cors());
 app.use(express.json());
 
@@ -47,25 +47,36 @@ app.get("/", (req, res) => {
     );
 });
 
-// Lendo chamados
+// Lendo chamados com segurança contra arquivos corrompidos ou vazios
 function lerChamados() {
-    const dados = fs.readFileSync(databasePath, "utf8");
+    try {
+        if (!fs.existsSync(databasePath)) {
+            return [];
+        }
+        const dados = fs.readFileSync(databasePath, "utf8");
 
-    if (!dados.trim()) {
+        if (!dados || !dados.trim()) {
+            return [];
+        }
+
+        const chamados = JSON.parse(dados);
+
+        if (!Array.isArray(chamados)) {
+            return [];
+        }
+
+        return chamados;
+    } catch (erro) {
+        console.error("Aviso: Erro ao ler JSON, retornando lista vazia.", erro);
         return [];
     }
-
-    const chamados = JSON.parse(dados);
-
-    if (!Array.isArray(chamados)) {
-        throw new Error("O banco de chamados precisa conter uma lista.");
-    }
-
-    return chamados;
 }
 
-// Salvando chamados
+// Salvando chamados com verificação de diretório
 function salvarChamados(chamados) {
+    if (!fs.existsSync(databaseDirectory)) {
+        fs.mkdirSync(databaseDirectory, { recursive: true });
+    }
     fs.writeFileSync(
         databasePath,
         JSON.stringify(chamados, null, 4),
@@ -87,7 +98,6 @@ app.get("/api/chamados", (req, res) => {
         res.json(lerChamados());
     } catch (erro) {
         console.error("Erro ao ler chamados:", erro);
-
         res.status(500).json({
             erro: "Erro ao ler os chamados."
         });
@@ -107,7 +117,7 @@ app.post("/api/chamados", (req, res) => {
 
         const chamados = lerChamados();
 
-        // Gerarando ID automaticamente
+        // Gerando ID automaticamente
         const novoId = chamados.reduce(
             (maiorId, chamado) =>
                 Math.max(maiorId, Number(chamado.id) || 0),
@@ -130,7 +140,6 @@ app.post("/api/chamados", (req, res) => {
         res.status(201).json(novoChamado);
     } catch (erro) {
         console.error("Erro ao criar chamado:", erro);
-
         res.status(500).json({
             erro: "Erro ao criar chamado."
         });
@@ -186,7 +195,6 @@ app.put("/api/chamados/:id", (req, res) => {
         });
     } catch (erro) {
         console.error("Erro ao atualizar status:", erro);
-
         res.status(500).json({
             erro: "Erro ao atualizar status do chamado."
         });
@@ -194,10 +202,6 @@ app.put("/api/chamados/:id", (req, res) => {
 });
 
 // GERANDO RELATÓRIOS DIÁRIOS, SEMANAIS E MENSAIS
-// GET /api/relatorios?tipo=diario
-// GET /api/relatorios?tipo=semanal
-// GET /api/relatorios?tipo=mensal
-
 app.get("/api/relatorios", (req, res) => {
     try {
         const { tipo } = req.query;
@@ -288,7 +292,6 @@ app.get("/api/relatorios", (req, res) => {
             chamado => chamado.status === "Resolvido"
         ).length;
 
-        // Resposta do relatório ao ser chamado
         res.json({
             tipo,
             periodo: {
@@ -304,7 +307,6 @@ app.get("/api/relatorios", (req, res) => {
 
     } catch (erro) {
         console.error("Erro ao gerar relatório:", erro);
-
         res.status(500).json({
             erro: "Erro ao gerar relatório."
         });
@@ -312,14 +314,13 @@ app.get("/api/relatorios", (req, res) => {
 });
 
 // Mensagem caso a rota não seja encontrada
-
 app.use((req, res) => {
     res.status(404).json({
         erro: "Rota não encontrada."
     });
 });
 
-// Inicializando o servidor uma única vez
+// Inicializando o servidor
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Help Desk iniciado na porta ${PORT}`);
     console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
