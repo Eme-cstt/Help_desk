@@ -64,14 +64,6 @@ A plataforma conecta diretamente os docentes ao **Setor de Apoio**, reduzindo o 
 
 ---
 
-## Sobre o Projeto
-
-O **Suporte aos Professores — UniEnsino** é uma aplicação web desenvolvida para otimizar, centralizar e acelerar a resolução de incidentes nas salas de aula. 
-
-A plataforma conecta diretamente os docentes ao **Setor de Apoio**, reduzindo o tempo de inatividade em sala de aula e permitindo uma gestão eficiente da infraestrutura escolar (projetores, computadores, conectividade, ar-condicionado, limpeza, etc.).
-
----
-
 ## Módulos do Sistema
 
 | Módulo | Público-Alvo | Descrição Principais |
