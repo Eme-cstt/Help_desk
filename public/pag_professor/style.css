@@ -587,9 +587,7 @@ textarea::placeholder {
 }
 
 
-/* ========================================
-   RESPONSIVIDADE
-======================================== */
+/* RESPONSIVIDADE */
 
 @media (max-width: 600px) {
 
