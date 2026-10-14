@@ -85,6 +85,6 @@ help_desk/
 
 ## Desenvolvimento & Impacto Real
 
-Este sistema foi idealizado, projetado e desenvolvido por **Emerson Castro**.
+Este sistema foi idealizado, projetado e desenvolvido por **Emerson Castro**- UniEnsino.
 
 🚀 **Status do Projeto:** Encontra-se **em uso prático e operacional**, atendendo diariamente à demanda de chamados de infraestrutura e suporte técnico das salas de aula na **UniEnsino**.
