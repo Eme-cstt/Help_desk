@@ -63,27 +63,6 @@ A plataforma conecta diretamente os docentes ao **Setor de Apoio**, reduzindo o 
 
 ---
 
-##  Tecnologias Utilizadas
-
-### Frontend
-- **HTML5 & CSS3:** Estrutura base e estilização customizada.
-- **Tailwind CSS:** Design responsivo e moderno no painel administrativo.
-- **JavaScript (ES6+):** Lógica do cliente, manipulação do DOM e validações.
-- **Fetch API:** Comunicação assíncrona com os endpoints.
-- **SheetJS (XLSX):** Processamento e geração dos relatórios Excel no client-side.
-
-### Backend
-- **Node.js & Express.js:** Servidor web e construção da API REST.
-- **CORS:** Controle e segurança no acesso entre origens.
-- **File System (fs) & JSON:** Persistência de dados em arquivo plano.
-
-### Infraestrutura & Ferramentas
-- **Render:** Hospedagem da aplicação web e API.
-- **GitHub:** Versionamento e controle de código.
-- **npm:** Gerenciador de pacotes.
-
----
-
 ##  Arquitetura do Projeto
 
 A solução adota uma arquitetura Cliente-Servidor (REST):
