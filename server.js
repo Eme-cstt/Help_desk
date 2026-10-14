@@ -200,56 +200,96 @@ app.listen(PORT, "0.0.0.0", () => {
 // Gerar relatórios (diário, semanal, mensal)
 app.get("/api/relatorios", (req, res) => {
     try {
-        const { tipo } = req.query; // Espera "diario", "semanal" ou "mensal"
+        const { tipo } = req.query;
         const chamados = lerChamados();
 
+        if (!["diario", "semanal", "mensal"].includes(tipo)) {
+            return res.status(400).json({
+                erro: "Tipo inválido. Use diario, semanal ou mensal."
+            });
+        }
+
         const agora = new Date();
-        
-        const chamadosFiltrados = chamados.filter(chamado => {
+        let inicio;
+        let fim = new Date(agora);
+
+        // Intervalos baseados na data local do servidor
+        if (tipo === "diario") {
+            inicio = new Date(agora);
+            inicio.setHours(0, 0, 0, 0);
+
+            fim = new Date(agora);
+            fim.setHours(23, 59, 59, 999);
+
+        } else if (tipo === "semanal") {
+            // Semana de segunda-feira a domingo
+            inicio = new Date(agora);
+            inicio.setHours(0, 0, 0, 0);
+
+            const diaSemana = inicio.getDay();
+            const diasDesdeSegunda = (diaSemana + 6) % 7;
+
+            inicio.setDate(inicio.getDate() - diasDesdeSegunda);
+
+            fim = new Date(inicio);
+            fim.setDate(fim.getDate() + 7);
+            fim.setMilliseconds(-1);
+
+        } else {
+            // Mês atual
+            inicio = new Date(
+                agora.getFullYear(),
+                agora.getMonth(),
+                1
+            );
+
+            fim = new Date(
+                agora.getFullYear(),
+                agora.getMonth() + 1,
+                1
+            );
+            fim.setMilliseconds(-1);
+        }
+
+        const dados = chamados.filter(chamado => {
             if (!chamado.createdAt) return false;
-            
-            const dataChamado = new Date(chamado.createdAt);
-            
-            if (tipo === "diario") {
-                // Compara se é o mesmo dia, mês e ano
-                return (
-                    dataChamado.getDate() === agora.getDate() &&
-                    dataChamado.getMonth() === agora.getMonth() &&
-                    dataChamado.getFullYear() === agora.getFullYear()
-                );
-            } else if (tipo === "semanal") {
-                // Últimos 7 dias (ou da mesma semana)
-                const umaSemanaAtras = new Date();
-                umaSemanaAtras.setDate(agora.getDate() - 7);
-                return dataChamado >= umaSemanaAtras && dataChamado <= agora;
-            } else if (tipo === "mensal") {
-                // Mesmo mês e ano atual
-                return (
-                    dataChamado.getMonth() === agora.getMonth() &&
-                    dataChamado.getFullYear() === agora.getFullYear()
-                );
-            }
-            
-            // Se nenhum tipo válido for passado, retorna todos ou rejeita
-            return true;
+
+            const data = new Date(chamado.createdAt);
+
+            if (Number.isNaN(data.getTime())) return false;
+
+            return data >= inicio && data <= fim;
         });
 
-        // Montar estatísticas simples para o relatório
-        const total = chamadosFiltrados.length;
-        const abertos = chamadosFiltrados.filter(c => c.status === "Aberto").length;
-        const concluidos = total - abertos;
+        const abertos = dados.filter(
+            chamado => chamado.status === "Aberto"
+        ).length;
 
-        res.json({
-            tipo: tipo || "geral",
-            totalChamados: total,
+        const emAndamento = dados.filter(
+            chamado => chamado.status === "Em andamento"
+        ).length;
+
+        const resolvidos = dados.filter(
+            chamado => chamado.status === "Resolvido"
+        ).length;
+
+        return res.json({
+            tipo,
+            periodo: {
+                inicio: inicio.toISOString(),
+                fim: fim.toISOString()
+            },
+            totalChamados: dados.length,
             chamadosAbertos: abertos,
-            chamadosConcluidos: concluidos,
-            dados: chamadosFiltrados
+            chamadosEmAndamento: emAndamento,
+            chamadosConcluidos: resolvidos,
+            dados
         });
 
     } catch (erro) {
         console.error("Erro ao gerar relatório:", erro);
-        res.status(500).json({
+
+        return res.status(500).json({
             erro: "Erro ao gerar relatório."
         });
     }
