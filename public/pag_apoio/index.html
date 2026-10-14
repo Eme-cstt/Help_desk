@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <!-- Botões de Ações (Atualizar e Relatórios) -->
+        <!-- Botões de Ações -->
         <div class="flex items-center gap-3 flex-wrap">
             <button onclick="carregarChamados()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
                 Atualizar Lista
@@ -123,8 +123,7 @@
 </div>
 
 <script>
-    // Ajuste para apontar para o seu Render ou ambiente local
-    // Se estiver testando localmente mude para 'http://localhost:3000/api'
+    // Conectando a API e listando os chamados
     const API_BASE_URL = 'https://help-desk-xjqm.onrender.com/api';
     
     let chamadosGlobais = []; 
@@ -249,7 +248,7 @@ async function gerarRelatorio(tipo) {
             );
         }
 
-        // Atualizar o modal de resumo
+        // Atualizando modal de resumo
         const nomes = {
             diario: "Diário",
             semanal: "Semanal",
