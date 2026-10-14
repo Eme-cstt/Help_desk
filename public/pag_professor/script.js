@@ -146,7 +146,7 @@ async function carregarRelatorio(tipo) {
         console.log(`Concluídos: ${relatorio.chamadosConcluidos}`);
         console.log("Detalhes:", relatorio.dados);
 
-        // Aqui você pode atualizar elementos HTML da sua página com esses dados (ex: innerText)
+        // Atualizando elementos do relatório
 
     } catch (erro) {
         console.error("Erro:", erro);
