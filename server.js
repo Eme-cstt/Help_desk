@@ -5,7 +5,6 @@ const cors = require("cors");
 
 const app = express();
 
-// Render define as rotas
 // O servidor utilizará a porta 3000 ou a definida pelo ambiente.
 const PORT = process.env.PORT || 3000;
 
@@ -16,11 +15,11 @@ const imagesDirectory = path.join(publicDirectory, "imagens");
 const databaseDirectory = path.join(__dirname, "data_base");
 const databasePath = path.join(databaseDirectory, "chamados.json");
 
-// Middlewares (Ponte do projeto)
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Arquivos publicos
+// Arquivos públicos
 app.use(express.static(publicDirectory));
 
 // Imagem da logo
@@ -28,13 +27,17 @@ app.use("/imagens", express.static(imagesDirectory));
 
 // Preparar o arquivo JSON sem apagar dados existentes
 function prepararBanco() {
-    if (!fs.existsSync(databaseDirectory)) {
-        fs.mkdirSync(databaseDirectory, { recursive: true });
-    }
+    try {
+        if (!fs.existsSync(databaseDirectory)) {
+            fs.mkdirSync(databaseDirectory, { recursive: true });
+        }
 
-    if (!fs.existsSync(databasePath)) {
-        fs.writeFileSync(databasePath, "[]", "utf8");
-        console.log("Arquivo chamados.json criado.");
+        if (!fs.existsSync(databasePath)) {
+            fs.writeFileSync(databasePath, "[]", "utf8");
+            console.log("Arquivo chamados.json criado com sucesso.");
+        }
+    } catch (erro) {
+        console.error("Erro ao preparar o banco de dados:", erro);
     }
 }
 
@@ -74,14 +77,19 @@ function lerChamados() {
 
 // Salvando chamados com verificação de diretório
 function salvarChamados(chamados) {
-    if (!fs.existsSync(databaseDirectory)) {
-        fs.mkdirSync(databaseDirectory, { recursive: true });
+    try {
+        if (!fs.existsSync(databaseDirectory)) {
+            fs.mkdirSync(databaseDirectory, { recursive: true });
+        }
+        fs.writeFileSync(
+            databasePath,
+            JSON.stringify(chamados, null, 4),
+            "utf8"
+        );
+    } catch (erro) {
+        console.error("Erro ao salvar chamados:", erro);
+        throw erro;
     }
-    fs.writeFileSync(
-        databasePath,
-        JSON.stringify(chamados, null, 4),
-        "utf8"
-    );
 }
 
 // Verificar se a API está funcionando
@@ -201,7 +209,7 @@ app.put("/api/chamados/:id", (req, res) => {
     }
 });
 
-// GERANDO RELATÓRIOS DIÁRIOS, SEMANAIS E MENSAIS
+// Gerando relatórios diários, semanais e mensais
 app.get("/api/relatorios", (req, res) => {
     try {
         const { tipo } = req.query;
@@ -264,7 +272,6 @@ app.get("/api/relatorios", (req, res) => {
             fim.setMilliseconds(-1);
         }
 
-        // Filtrando chamados pelo período de criação
         const dados = chamados.filter(chamado => {
             if (!chamado.createdAt) {
                 return false;
@@ -279,7 +286,6 @@ app.get("/api/relatorios", (req, res) => {
             return data >= inicio && data <= fim;
         });
 
-        // Estatísticas por status
         const abertos = dados.filter(
             chamado => chamado.status === "Aberto"
         ).length;
