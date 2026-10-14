@@ -61,20 +61,6 @@ A plataforma conecta diretamente os docentes ao **Setor de Apoio**, reduzindo o 
 - **GitHub:** Versionamento e controle de código.
 - **npm:** Gerenciador de pacotes.
 
----
-
-## Arquitetura do Projeto
-
-A solução adota uma arquitetura **Cliente-Servidor (REST)**:
-# Suporte aos Professores | UNIENSINO
-
-> **Sistema centralizado para gerenciamento de solicitações de suporte técnico e infraestrutura educacional.**
-
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 
 ---
 
