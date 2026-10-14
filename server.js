@@ -5,8 +5,8 @@ const cors = require("cors");
 
 const app = express();
 
-// Render define a porta por variável de ambiente.
-// Localmente, o servidor utilizará a porta 3000.
+// Render define as rotas
+// O servidor utilizará a porta 3000.
 const PORT = process.env.PORT || 3000;
 
 // Caminhos do projeto
@@ -16,14 +16,14 @@ const imagesDirectory = path.join(publicDirectory, "imagens");
 const databaseDirectory = path.join(__dirname, "data_base");
 const databasePath = path.join(databaseDirectory, "chamados.json");
 
-// Middlewares
+// Middlewares(Ponte do projeto)
 app.use(cors());
 app.use(express.json());
 
-// Frontend: HTML, CSS, JavaScript e demais arquivos públicos
+// Arquivos publicos
 app.use(express.static(publicDirectory));
 
-// Imagens disponíveis em /imagens/nome-do-arquivo.png
+// Imagem da logo
 app.use("/imagens", express.static(imagesDirectory));
 
 // Preparar o arquivo JSON sem apagar dados existentes
@@ -47,7 +47,7 @@ app.get("/", (req, res) => {
     );
 });
 
-// Ler chamados
+// Lendo chamados
 function lerChamados() {
     const dados = fs.readFileSync(databasePath, "utf8");
 
@@ -64,7 +64,7 @@ function lerChamados() {
     return chamados;
 }
 
-// Salvar chamados
+// Salvando chamados
 function salvarChamados(chamados) {
     fs.writeFileSync(
         databasePath,
@@ -81,7 +81,7 @@ app.get("/api/health", (req, res) => {
     });
 });
 
-// Listar chamados
+// Lista chamados
 app.get("/api/chamados", (req, res) => {
     try {
         res.json(lerChamados());
@@ -107,7 +107,7 @@ app.post("/api/chamados", (req, res) => {
 
         const chamados = lerChamados();
 
-        // Gerar ID automaticamente
+        // Gerarando ID automaticamente
         const novoId = chamados.reduce(
             (maiorId, chamado) =>
                 Math.max(maiorId, Number(chamado.id) || 0),
@@ -137,7 +137,7 @@ app.post("/api/chamados", (req, res) => {
     }
 });
 
-// Atualizar status do chamado
+// Atualizando status do chamado
 app.put("/api/chamados/:id", (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -193,12 +193,10 @@ app.put("/api/chamados/:id", (req, res) => {
     }
 });
 
-// ======================================================
-// GERAR RELATÓRIOS DIÁRIOS, SEMANAIS E MENSAIS
+// GERANDO RELATÓRIOS DIÁRIOS, SEMANAIS E MENSAIS
 // GET /api/relatorios?tipo=diario
 // GET /api/relatorios?tipo=semanal
 // GET /api/relatorios?tipo=mensal
-// ======================================================
 
 app.get("/api/relatorios", (req, res) => {
     try {
@@ -223,7 +221,6 @@ app.get("/api/relatorios", (req, res) => {
         let fim;
 
         if (tipo === "diario") {
-            // Hoje, da meia-noite até o fim do dia
             inicio = new Date(agora);
             inicio.setHours(0, 0, 0, 0);
 
@@ -231,7 +228,6 @@ app.get("/api/relatorios", (req, res) => {
             fim.setHours(23, 59, 59, 999);
 
         } else if (tipo === "semanal") {
-            // Semana atual: segunda-feira a domingo
             inicio = new Date(agora);
             inicio.setHours(0, 0, 0, 0);
 
@@ -247,7 +243,6 @@ app.get("/api/relatorios", (req, res) => {
             fim.setMilliseconds(-1);
 
         } else {
-            // Mês atual: primeiro ao último dia
             inicio = new Date(
                 agora.getFullYear(),
                 agora.getMonth(),
@@ -265,7 +260,7 @@ app.get("/api/relatorios", (req, res) => {
             fim.setMilliseconds(-1);
         }
 
-        // Filtrar chamados pelo período de criação
+        // Filtrando chamados pelo período de criação
         const dados = chamados.filter(chamado => {
             if (!chamado.createdAt) {
                 return false;
@@ -293,7 +288,7 @@ app.get("/api/relatorios", (req, res) => {
             chamado => chamado.status === "Resolvido"
         ).length;
 
-        // Resposta do relatório
+        // Resposta do relatório ao ser chamado
         res.json({
             tipo,
             periodo: {
@@ -316,10 +311,7 @@ app.get("/api/relatorios", (req, res) => {
     }
 });
 
-// ======================================================
-// ROTA NÃO ENCONTRADA
-// Deve ficar depois de TODAS as rotas da API
-// ======================================================
+// Mensagem caso a rota não seja encontrada
 
 app.use((req, res) => {
     res.status(404).json({
@@ -327,7 +319,7 @@ app.use((req, res) => {
     });
 });
 
-// Inicializar o servidor uma única vez
+// Inicializando o servidor uma única vez
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Help Desk iniciado na porta ${PORT}`);
     console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
