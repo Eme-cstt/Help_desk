@@ -195,3 +195,62 @@ app.listen(PORT, "0.0.0.0", () => {
     console.log(`Help Desk iniciado na porta ${PORT}`);
     console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
 });
+
+
+// Gerar relatórios (diário, semanal, mensal)
+app.get("/api/relatorios", (req, res) => {
+    try {
+        const { tipo } = req.query; // Espera "diario", "semanal" ou "mensal"
+        const chamados = lerChamados();
+
+        const agora = new Date();
+        
+        const chamadosFiltrados = chamados.filter(chamado => {
+            if (!chamado.createdAt) return false;
+            
+            const dataChamado = new Date(chamado.createdAt);
+            
+            if (tipo === "diario") {
+                // Compara se é o mesmo dia, mês e ano
+                return (
+                    dataChamado.getDate() === agora.getDate() &&
+                    dataChamado.getMonth() === agora.getMonth() &&
+                    dataChamado.getFullYear() === agora.getFullYear()
+                );
+            } else if (tipo === "semanal") {
+                // Últimos 7 dias (ou da mesma semana)
+                const umaSemanaAtras = new Date();
+                umaSemanaAtras.setDate(agora.getDate() - 7);
+                return dataChamado >= umaSemanaAtras && dataChamado <= agora;
+            } else if (tipo === "mensal") {
+                // Mesmo mês e ano atual
+                return (
+                    dataChamado.getMonth() === agora.getMonth() &&
+                    dataChamado.getFullYear() === agora.getFullYear()
+                );
+            }
+            
+            // Se nenhum tipo válido for passado, retorna todos ou rejeita
+            return true;
+        });
+
+        // Montar estatísticas simples para o relatório
+        const total = chamadosFiltrados.length;
+        const abertos = chamadosFiltrados.filter(c => c.status === "Aberto").length;
+        const concluidos = total - abertos;
+
+        res.json({
+            tipo: tipo || "geral",
+            totalChamados: total,
+            chamadosAbertos: abertos,
+            chamadosConcluidos: concluidos,
+            dados: chamadosFiltrados
+        });
+
+    } catch (erro) {
+        console.error("Erro ao gerar relatório:", erro);
+        res.status(500).json({
+            erro: "Erro ao gerar relatório."
+        });
+    }
+});
