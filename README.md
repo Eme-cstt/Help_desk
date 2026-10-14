@@ -61,32 +61,6 @@ A plataforma conecta diretamente os docentes ao **Setor de Apoio**, reduzindo o 
 - **GitHub:** Versionamento e controle de código.
 - **npm:** Gerenciador de pacotes.
 
-
----
-
-## Funcionalidades
-
-### 1. Portal do Professor
-- **Abertura de Chamados:** Registro rápido com dados do professor, sala, categoria e descrição do problema.
-- **Categorização Visual:** Interface intuitiva para classificação imediata de incidentes.
-- **Validação Automática:** Verificação de campos obrigatórios antes do envio.
-- **Fluxo Contínuo:** Possibilidade de abrir novos chamados sem necessidade de recarregar a página.
-
-### 2. Painel do Setor de Apoio
-- **Gestão em Tempo Real:** Visualização dinâmica dos chamados ativos consumidos via API.
-- **Controle de Status:**
-  - 🔴 **Aberto**
-  - 🟡 **Em andamento**
-  - 🟢 **Resolvido**
-- **Identificação Visual:** Tags de cores para facilitar a triagem rápida dos incidentes.
-
-### 3. Relatórios Gerenciais & Exportação
-- **Métricas por Período:** Relatórios consolidados **Diários**, **Semanais** (segunda a domingo) e **Mensais**.
-- **Indicadores Quantitativos:** Total de chamados, abertos, em andamento e resolvidos.
-- **Exportação Excel (`.xlsx`):** Gerada diretamente no navegador via **SheetJS**, contendo duas abas:
-  - `Resumo`: Período e métricas consolidadas.
-  - `Chamados`: Tabela detalhada de cada ocorrência.
-
 ---
 
 ##  Tecnologias Utilizadas
