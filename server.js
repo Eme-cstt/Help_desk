@@ -87,6 +87,7 @@ app.get("/api/chamados", (req, res) => {
         res.json(lerChamados());
     } catch (erro) {
         console.error("Erro ao ler chamados:", erro);
+
         res.status(500).json({
             erro: "Erro ao ler os chamados."
         });
@@ -98,12 +99,7 @@ app.post("/api/chamados", (req, res) => {
     try {
         const { categoria, sala, professor, descricao } = req.body;
 
-        if (
-            !categoria ||
-            !sala ||
-            !professor ||
-            !descricao
-        ) {
+        if (!categoria || !sala || !professor || !descricao) {
             return res.status(400).json({
                 erro: "Todos os campos são obrigatórios."
             });
@@ -111,9 +107,10 @@ app.post("/api/chamados", (req, res) => {
 
         const chamados = lerChamados();
 
-        // Evitar depender da posição do último chamado no arquivo
+        // Gerar ID automaticamente
         const novoId = chamados.reduce(
-            (maiorId, chamado) => Math.max(maiorId, Number(chamado.id) || 0),
+            (maiorId, chamado) =>
+                Math.max(maiorId, Number(chamado.id) || 0),
             0
         ) + 1;
 
@@ -133,6 +130,7 @@ app.post("/api/chamados", (req, res) => {
         res.status(201).json(novoChamado);
     } catch (erro) {
         console.error("Erro ao criar chamado:", erro);
+
         res.status(500).json({
             erro: "Erro ao criar chamado."
         });
@@ -151,13 +149,23 @@ app.put("/api/chamados/:id", (req, res) => {
             });
         }
 
-        if (typeof status !== "string" || !status.trim()) {
+        const statusPermitidos = [
+            "Aberto",
+            "Em andamento",
+            "Resolvido"
+        ];
+
+        if (
+            typeof status !== "string" ||
+            !statusPermitidos.includes(status.trim())
+        ) {
             return res.status(400).json({
-                erro: "O campo status é obrigatório."
+                erro: "Status inválido. Use Aberto, Em andamento ou Resolvido."
             });
         }
 
         const chamados = lerChamados();
+
         const index = chamados.findIndex(
             chamado => Number(chamado.id) === id
         );
@@ -169,6 +177,7 @@ app.put("/api/chamados/:id", (req, res) => {
         }
 
         chamados[index].status = status.trim();
+
         salvarChamados(chamados);
 
         res.json({
@@ -177,44 +186,44 @@ app.put("/api/chamados/:id", (req, res) => {
         });
     } catch (erro) {
         console.error("Erro ao atualizar status:", erro);
+
         res.status(500).json({
             erro: "Erro ao atualizar status do chamado."
         });
     }
 });
 
-// Rota não encontrada
-app.use((req, res) => {
-    res.status(404).json({
-        erro: "Rota não encontrada."
-    });
-});
+// ======================================================
+// GERAR RELATÓRIOS DIÁRIOS, SEMANAIS E MENSAIS
+// GET /api/relatorios?tipo=diario
+// GET /api/relatorios?tipo=semanal
+// GET /api/relatorios?tipo=mensal
+// ======================================================
 
-// Inicializar o servidor uma única vez
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Help Desk iniciado na porta ${PORT}`);
-    console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
-});
-
-
-// Gerar relatórios (diário, semanal, mensal)
 app.get("/api/relatorios", (req, res) => {
     try {
         const { tipo } = req.query;
-        const chamados = lerChamados();
 
-        if (!["diario", "semanal", "mensal"].includes(tipo)) {
+        const tiposPermitidos = [
+            "diario",
+            "semanal",
+            "mensal"
+        ];
+
+        if (!tiposPermitidos.includes(tipo)) {
             return res.status(400).json({
                 erro: "Tipo inválido. Use diario, semanal ou mensal."
             });
         }
 
+        const chamados = lerChamados();
         const agora = new Date();
-        let inicio;
-        let fim = new Date(agora);
 
-        // Intervalos baseados na data local do servidor
+        let inicio;
+        let fim;
+
         if (tipo === "diario") {
+            // Hoje, da meia-noite até o fim do dia
             inicio = new Date(agora);
             inicio.setHours(0, 0, 0, 0);
 
@@ -222,45 +231,56 @@ app.get("/api/relatorios", (req, res) => {
             fim.setHours(23, 59, 59, 999);
 
         } else if (tipo === "semanal") {
-            // Semana de segunda-feira a domingo
+            // Semana atual: segunda-feira a domingo
             inicio = new Date(agora);
             inicio.setHours(0, 0, 0, 0);
 
             const diaSemana = inicio.getDay();
             const diasDesdeSegunda = (diaSemana + 6) % 7;
 
-            inicio.setDate(inicio.getDate() - diasDesdeSegunda);
+            inicio.setDate(
+                inicio.getDate() - diasDesdeSegunda
+            );
 
             fim = new Date(inicio);
             fim.setDate(fim.getDate() + 7);
             fim.setMilliseconds(-1);
 
         } else {
-            // Mês atual
+            // Mês atual: primeiro ao último dia
             inicio = new Date(
                 agora.getFullYear(),
                 agora.getMonth(),
-                1
+                1,
+                0, 0, 0, 0
             );
 
             fim = new Date(
                 agora.getFullYear(),
                 agora.getMonth() + 1,
-                1
+                1,
+                0, 0, 0, 0
             );
+
             fim.setMilliseconds(-1);
         }
 
+        // Filtrar chamados pelo período de criação
         const dados = chamados.filter(chamado => {
-            if (!chamado.createdAt) return false;
+            if (!chamado.createdAt) {
+                return false;
+            }
 
             const data = new Date(chamado.createdAt);
 
-            if (Number.isNaN(data.getTime())) return false;
+            if (Number.isNaN(data.getTime())) {
+                return false;
+            }
 
             return data >= inicio && data <= fim;
         });
 
+        // Estatísticas por status
         const abertos = dados.filter(
             chamado => chamado.status === "Aberto"
         ).length;
@@ -273,7 +293,8 @@ app.get("/api/relatorios", (req, res) => {
             chamado => chamado.status === "Resolvido"
         ).length;
 
-        return res.json({
+        // Resposta do relatório
+        res.json({
             tipo,
             periodo: {
                 inicio: inicio.toISOString(),
@@ -289,8 +310,25 @@ app.get("/api/relatorios", (req, res) => {
     } catch (erro) {
         console.error("Erro ao gerar relatório:", erro);
 
-        return res.status(500).json({
+        res.status(500).json({
             erro: "Erro ao gerar relatório."
         });
     }
+});
+
+// ======================================================
+// ROTA NÃO ENCONTRADA
+// Deve ficar depois de TODAS as rotas da API
+// ======================================================
+
+app.use((req, res) => {
+    res.status(404).json({
+        erro: "Rota não encontrada."
+    });
+});
+
+// Inicializar o servidor uma única vez
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Help Desk iniciado na porta ${PORT}`);
+    console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
 });
