@@ -1,5 +1,5 @@
-// ENDEREÇO DA API NO RENDER
-const API_URL = "https://help-desk-xjqm.onrender.com/api";
+// ENDEREÇO DA API NA NUVEM (Caminho relativo para funcionar perfeitamente no Render)
+const API_URL = "/api";
 
 // CATEGORIA SELECIONADA
 let categoriaSelecionada = null;
@@ -86,7 +86,7 @@ async function abrirChamado() {
         }
 
         // SUCESSO
-        mostrarSucesso(chamado);
+        fazerSucesso(chamado);
 
     } catch (erro) {
         console.error("Erro ao abrir chamado:", erro);
@@ -102,7 +102,7 @@ async function abrirChamado() {
 }
 
 // MOSTRAR MENSAGEM DE SUCESSO
-function mostrarSucesso(chamado) {
+function fazerSucesso(chamado) {
     document.getElementById("modalCategory").textContent =
         chamado.categoria;
 
@@ -129,8 +129,6 @@ newTicketButton.addEventListener("click", () => {
     });
 });
 
-
-
 async function carregarRelatorio(tipo) {
     try {
         const resposta = await fetch(`${API_URL}/relatorios?tipo=${tipo}`);
@@ -145,8 +143,6 @@ async function carregarRelatorio(tipo) {
         console.log(`Abertos: ${relatorio.chamadosAbertos}`);
         console.log(`Concluídos: ${relatorio.chamadosConcluidos}`);
         console.log("Detalhes:", relatorio.dados);
-
-        // Atualizando elementos do relatório
 
     } catch (erro) {
         console.error("Erro:", erro);
