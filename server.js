@@ -12,7 +12,9 @@ const PORT = process.env.PORT || 3000;
 const publicDirectory = path.join(__dirname, "public");
 const imagesDirectory = path.join(publicDirectory, "imagens");
 
-const databaseDirectory = path.join(__dirname, "data_base");
+// Correção para o Render: usa o diretório /tmp em produção para permitir gravação sem erro 500
+const isRender = process.env.RENDER || process.env.NODE_ENV === "production" || process.env.PORT;
+const databaseDirectory = isRender ? path.join("/tmp", "data_base") : path.join(__dirname, "data_base");
 const databasePath = path.join(databaseDirectory, "chamados.json");
 
 // Middlewares
@@ -34,7 +36,7 @@ function prepararBanco() {
 
         if (!fs.existsSync(databasePath)) {
             fs.writeFileSync(databasePath, "[]", "utf8");
-            console.log("Arquivo chamados.json criado com sucesso.");
+            console.log("Arquivo chamados.json criado com sucesso em:", databasePath);
         }
     } catch (erro) {
         console.error("Erro ao preparar o banco de dados:", erro);
