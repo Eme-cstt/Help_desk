@@ -64,15 +64,6 @@ A plataforma conecta diretamente os docentes ao **Setor de Apoio**, reduzindo o 
 
 ---
 
-## Módulos do Sistema
-
-| Módulo | Público-Alvo | Descrição Principais |
-| :--- | :--- | :--- |
-| **Portal do Professor** | Docentes | Interface simplificada para abertura ágil de chamados por sala e categoria. |
-| **Painel do Setor de Apoio** | Equipe Técnica | Dashboard administrativo para gestão de status, filtros e exportação de relatórios. |
-
----
-
 ## Funcionalidades
 
 ### 1. Portal do Professor
