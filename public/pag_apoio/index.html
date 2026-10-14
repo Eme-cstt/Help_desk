@@ -235,33 +235,146 @@
     }
 
     // Função para buscar e exibir relatórios
-    async function gerarRelatorio(tipo) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/relatorios?tipo=${tipo}`);
-            const relatorio = await response.json();
+async function gerarRelatorio(tipo) {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/relatorios?tipo=${tipo}`
+        );
 
-            if (!response.ok) {
-                throw new Error(relatorio.erro || 'Erro ao gerar relatório.');
-            }
+        const relatorio = await response.json();
 
-            document.getElementById('relatorio-titulo').innerText = `Relatório ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
-            document.getElementById('stat-total').innerText = relatorio.totalChamados;
-            document.getElementById('stat-abertos').innerText = relatorio.chamadosAbertos;
-            document.getElementById('stat-concluidos').innerText = relatorio.chamadosConcluidos;
-
-            document.getElementById('modal-relatorio').classList.remove('hidden');
-        } catch (error) {
-            console.error('Erro ao gerar relatório:', error);
-            alert('Não foi possível carregar o relatório.');
+        if (!response.ok) {
+            throw new Error(
+                relatorio.erro || "Erro ao gerar relatório."
+            );
         }
-    }
 
-    function fecharModalRelatorio() {
-        document.getElementById('modal-relatorio').classList.add('hidden');
-    }
+        // Atualizar o modal de resumo
+        const nomes = {
+            diario: "Diário",
+            semanal: "Semanal",
+            mensal: "Mensal"
+        };
 
-    // Carrega os chamados ao abrir a página
-    carregarChamados();
+        document.getElementById("relatorio-titulo").innerText =
+            `Relatório ${nomes[tipo]}`;
+
+        document.getElementById("stat-total").innerText =
+            relatorio.totalChamados;
+
+        document.getElementById("stat-abertos").innerText =
+            relatorio.chamadosAbertos;
+
+        document.getElementById("stat-concluidos").innerText =
+            relatorio.chamadosConcluidos;
+
+        document.getElementById("modal-relatorio")
+            .classList.remove("hidden");
+
+        // Verificar se a biblioteca Excel foi carregada
+        if (typeof XLSX === "undefined") {
+            throw new Error(
+                "Biblioteca Excel não carregada. Verifique sua conexão."
+            );
+        }
+
+        // Preparar dados do relatório
+        const chamados = relatorio.dados || [];
+
+        const dataFormatada = data =>
+            data
+                ? new Date(data).toLocaleString("pt-BR")
+                : "Não informada";
+
+        // Planilha 1: Resumo
+        const resumo = [
+            ["RELATÓRIO DO SETOR DE APOIO"],
+            ["Tipo de relatório", nomes[tipo]],
+            ["Data de geração", new Date().toLocaleString("pt-BR")],
+            ["Início do período", dataFormatada(relatorio.periodo?.inicio)],
+            ["Fim do período", dataFormatada(relatorio.periodo?.fim)],
+            [],
+            ["INDICADORES", "QUANTIDADE"],
+            ["Total de chamados", relatorio.totalChamados],
+            ["Abertos", relatorio.chamadosAbertos],
+            ["Em andamento", relatorio.chamadosEmAndamento],
+            ["Resolvidos", relatorio.chamadosConcluidos]
+        ];
+
+        const planilhaResumo = XLSX.utils.aoa_to_sheet(resumo);
+
+        planilhaResumo["!cols"] = [
+            { wch: 28 },
+            { wch: 30 }
+        ];
+
+        // Planilha 2: Detalhamento dos chamados
+        const detalhes = chamados.map(chamado => ({
+            "ID": chamado.id,
+            "Data de criação": dataFormatada(chamado.createdAt),
+            "Professor": chamado.professor || "Não informado",
+            "Sala": chamado.sala || "Não informada",
+            "Categoria": chamado.categoria || "Não informada",
+            "Descrição": chamado.descricao || "Sem descrição",
+            "Status": chamado.status || "Aberto"
+        }));
+
+        const planilhaDetalhes = XLSX.utils.json_to_sheet(
+            detalhes,
+            {
+                header: [
+                    "ID",
+                    "Data de criação",
+                    "Professor",
+                    "Sala",
+                    "Categoria",
+                    "Descrição",
+                    "Status"
+                ]
+            }
+        );
+
+        planilhaDetalhes["!cols"] = [
+            { wch: 8 },
+            { wch: 22 },
+            { wch: 25 },
+            { wch: 14 },
+            { wch: 20 },
+            { wch: 50 },
+            { wch: 18 }
+        ];
+
+        // Criar arquivo Excel com duas planilhas
+        const workbook = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            planilhaResumo,
+            "Resumo"
+        );
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            planilhaDetalhes,
+            "Chamados"
+        );
+
+        // Nome do arquivo
+        const hoje = new Date().toISOString().slice(0, 10);
+
+        const nomeArquivo = `relatorio_${tipo}_${hoje}.xlsx`;
+
+        // Baixar o arquivo no computador
+        XLSX.writeFile(workbook, nomeArquivo);
+
+    } catch (error) {
+        console.error("Erro ao gerar relatório:", error);
+
+        alert(
+            `Não foi possível gerar o relatório Excel: ${error.message}`
+        );
+    }
+}
 </script>
 </body>
 </html>
