@@ -1,35 +1,44 @@
 const express = require("express");
-const { createClient } = require("@supabase/supabase-js");
+const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 
 const app = express();
 
-// O servidor utilizará a porta definida pelo Render ou 3000 localmente.
+// Render define as rotas
+// O servidor utilizará a porta 3000.
 const PORT = process.env.PORT || 3000;
-
-// Configuração do Supabase
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error("ERRO CRÍTICO: As variáveis SUPABASE_URL e SUPABASE_KEY precisam estar configuradas.");
-    process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Caminhos do projeto
 const publicDirectory = path.join(__dirname, "public");
 const imagesDirectory = path.join(publicDirectory, "imagens");
 
-// Middlewares
+const databaseDirectory = path.join(__dirname, "data_base");
+const databasePath = path.join(databaseDirectory, "chamados.json");
+
+// Middlewares(Ponte do projeto)
 app.use(cors());
 app.use(express.json());
 
-// Arquivos públicos
+// Arquivos publicos
 app.use(express.static(publicDirectory));
+
+// Imagem da logo
 app.use("/imagens", express.static(imagesDirectory));
+
+// Preparar o arquivo JSON sem apagar dados existentes
+function prepararBanco() {
+    if (!fs.existsSync(databaseDirectory)) {
+        fs.mkdirSync(databaseDirectory, { recursive: true });
+    }
+
+    if (!fs.existsSync(databasePath)) {
+        fs.writeFileSync(databasePath, "[]", "utf8");
+        console.log("Arquivo chamados.json criado.");
+    }
+}
+
+prepararBanco();
 
 // Página inicial
 app.get("/", (req, res) => {
@@ -38,33 +47,47 @@ app.get("/", (req, res) => {
     );
 });
 
+// Lendo chamados
+function lerChamados() {
+    const dados = fs.readFileSync(databasePath, "utf8");
+
+    if (!dados.trim()) {
+        return [];
+    }
+
+    const chamados = JSON.parse(dados);
+
+    if (!Array.isArray(chamados)) {
+        throw new Error("O banco de chamados precisa conter uma lista.");
+    }
+
+    return chamados;
+}
+
+// Salvando chamados
+function salvarChamados(chamados) {
+    fs.writeFileSync(
+        databasePath,
+        JSON.stringify(chamados, null, 4),
+        "utf8"
+    );
+}
+
 // Verificar se a API está funcionando
 app.get("/api/health", (req, res) => {
     res.json({
         status: "ok",
-        mensagem: "Help Desk funcionando com Supabase."
+        mensagem: "Help Desk funcionando."
     });
 });
 
 // Lista chamados
-app.get("/api/chamados", async (req, res) => {
+app.get("/api/chamados", (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from("chamados")
-            .select("*")
-            .order("id", { ascending: false });
-
-        if (error) throw error;
-
-        // Mapeia created_at para createdAt para manter padrão do front-end se necessário
-        const chamados = data.map(item => ({
-            ...item,
-            createdAt: item.created_at
-        }));
-
-        res.json(chamados);
+        res.json(lerChamados());
     } catch (erro) {
         console.error("Erro ao ler chamados:", erro);
+
         res.status(500).json({
             erro: "Erro ao ler os chamados."
         });
@@ -72,7 +95,7 @@ app.get("/api/chamados", async (req, res) => {
 });
 
 // Criar chamado
-app.post("/api/chamados", async (req, res) => {
+app.post("/api/chamados", (req, res) => {
     try {
         const { categoria, sala, professor, descricao } = req.body;
 
@@ -82,30 +105,32 @@ app.post("/api/chamados", async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
-            .from("chamados")
-            .insert([
-                {
-                    categoria,
-                    sala,
-                    professor,
-                    descricao,
-                    status: "Aberto"
-                }
-            ])
-            .select()
-            .single();
+        const chamados = lerChamados();
 
-        if (error) throw error;
+        // Gerarando ID automaticamente
+        const novoId = chamados.reduce(
+            (maiorId, chamado) =>
+                Math.max(maiorId, Number(chamado.id) || 0),
+            0
+        ) + 1;
 
         const novoChamado = {
-            ...data,
-            createdAt: data.created_at
+            id: novoId,
+            categoria,
+            sala,
+            professor,
+            descricao,
+            status: "Aberto",
+            createdAt: new Date().toISOString()
         };
+
+        chamados.push(novoChamado);
+        salvarChamados(chamados);
 
         res.status(201).json(novoChamado);
     } catch (erro) {
         console.error("Erro ao criar chamado:", erro);
+
         res.status(500).json({
             erro: "Erro ao criar chamado."
         });
@@ -113,7 +138,7 @@ app.post("/api/chamados", async (req, res) => {
 });
 
 // Atualizando status do chamado
-app.put("/api/chamados/:id", async (req, res) => {
+app.put("/api/chamados/:id", (req, res) => {
     try {
         const id = Number(req.params.id);
         const { status } = req.body;
@@ -139,31 +164,29 @@ app.put("/api/chamados/:id", async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
-            .from("chamados")
-            .update({ status: status.trim() })
-            .eq("id", id)
-            .select();
+        const chamados = lerChamados();
 
-        if (error) throw error;
+        const index = chamados.findIndex(
+            chamado => Number(chamado.id) === id
+        );
 
-        if (!data || data.length === 0) {
+        if (index === -1) {
             return res.status(404).json({
                 erro: "Chamado não encontrado."
             });
         }
 
-        const chamadoAtualizado = {
-            ...data[0],
-            createdAt: data[0].created_at
-        };
+        chamados[index].status = status.trim();
+
+        salvarChamados(chamados);
 
         res.json({
             mensagem: "Status atualizado com sucesso!",
-            chamado: chamadoAtualizado
+            chamado: chamados[index]
         });
     } catch (erro) {
         console.error("Erro ao atualizar status:", erro);
+
         res.status(500).json({
             erro: "Erro ao atualizar status do chamado."
         });
@@ -171,7 +194,11 @@ app.put("/api/chamados/:id", async (req, res) => {
 });
 
 // GERANDO RELATÓRIOS DIÁRIOS, SEMANAIS E MENSAIS
-app.get("/api/relatorios", async (req, res) => {
+// GET /api/relatorios?tipo=diario
+// GET /api/relatorios?tipo=semanal
+// GET /api/relatorios?tipo=mensal
+
+app.get("/api/relatorios", (req, res) => {
     try {
         const { tipo } = req.query;
 
@@ -187,7 +214,9 @@ app.get("/api/relatorios", async (req, res) => {
             });
         }
 
+        const chamados = lerChamados();
         const agora = new Date();
+
         let inicio;
         let fim;
 
@@ -231,19 +260,20 @@ app.get("/api/relatorios", async (req, res) => {
             fim.setMilliseconds(-1);
         }
 
-        // Consulta filtrada no Postgres via Supabase
-        const { data, error } = await supabase
-            .from("chamados")
-            .select("*")
-            .gte("created_at", inicio.toISOString())
-            .lte("created_at", fim.toISOString());
+        // Filtrando chamados pelo período de criação
+        const dados = chamados.filter(chamado => {
+            if (!chamado.createdAt) {
+                return false;
+            }
 
-        if (error) throw error;
+            const data = new Date(chamado.createdAt);
 
-        const dados = data.map(item => ({
-            ...item,
-            createdAt: item.created_at
-        }));
+            if (Number.isNaN(data.getTime())) {
+                return false;
+            }
+
+            return data >= inicio && data <= fim;
+        });
 
         // Estatísticas por status
         const abertos = dados.filter(
@@ -258,6 +288,7 @@ app.get("/api/relatorios", async (req, res) => {
             chamado => chamado.status === "Resolvido"
         ).length;
 
+        // Resposta do relatório ao ser chamado
         res.json({
             tipo,
             periodo: {
@@ -273,20 +304,22 @@ app.get("/api/relatorios", async (req, res) => {
 
     } catch (erro) {
         console.error("Erro ao gerar relatório:", erro);
+
         res.status(500).json({
             erro: "Erro ao gerar relatório."
         });
     }
 });
 
-// Rota 404
+// Mensagem caso a rota não seja encontrada
+
 app.use((req, res) => {
     res.status(404).json({
         erro: "Rota não encontrada."
     });
 });
 
-// Inicializando o servidor
+// Inicializando o servidor uma única vez
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Help Desk iniciado na porta ${PORT}`);
     console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
