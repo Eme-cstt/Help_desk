@@ -80,3 +80,11 @@ help_desk/
 ├── server.js                  # Ponto de entrada da aplicação e API REST
 ├── package.json               # Dependências e scripts do projeto
 └── README.md                  # Documentação do projeto
+
+---
+
+## Desenvolvimento & Impacto Real
+
+Este sistema foi idealizado, projetado e desenvolvido por **Emerson Castro**.
+
+🚀 **Status do Projeto:** Encontra-se **em uso prático e operacional**, atendendo diariamente à demanda de chamados de infraestrutura e suporte técnico das salas de aula na **UniEnsino**.
