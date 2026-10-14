@@ -128,3 +128,28 @@ newTicketButton.addEventListener("click", () => {
         botao.classList.remove("selecionada");
     });
 });
+
+
+
+async function carregarRelatorio(tipo) {
+    try {
+        const resposta = await fetch(`${API_URL}/relatorios?tipo=${tipo}`);
+        const relatorio = await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(relatorio.erro || "Erro ao buscar relatório.");
+        }
+
+        console.log(`--- Relatório ${tipo.toUpperCase()} ---`);
+        console.log(`Total: ${relatorio.totalChamados}`);
+        console.log(`Abertos: ${relatorio.chamadosAbertos}`);
+        console.log(`Concluídos: ${relatorio.chamadosConcluidos}`);
+        console.log("Detalhes:", relatorio.dados);
+
+        // Aqui você pode atualizar elementos HTML da sua página com esses dados (ex: innerText)
+
+    } catch (erro) {
+        console.error("Erro:", erro);
+        alert("Não foi possível carregar o relatório.");
+    }
+}
