@@ -1,25 +1,42 @@
-// ENDEREÇO DA API NO RENDER
-const API_URL = "https://help-desk-xjqm.onrender.com/api";
+// ENDEREÇO DA API
+const API_URL = "/api";
 
-// CATEGORIA SELECIONADA
+// CATEGORIA E CAMPUS SELECIONADOS
 let categoriaSelecionada = null;
+let campusSelecionado = null;
 
 // ELEMENTOS
 const botoesCategoria = document.querySelectorAll(".category");
-
+const botoesCampus = document.querySelectorAll(".campus-option");
 const submitButton = document.getElementById("submitButton");
-
 const newTicketButton = document.getElementById("newTicketButton");
 
-// SELECIONAR CATEGORIA
+// SELECIONAR CATEGORIA (Apenas entre as categorias)
 botoesCategoria.forEach((botao) => {
     botao.addEventListener("click", () => {
         categoriaSelecionada = botao.dataset.category;
 
         console.log("Categoria:", categoriaSelecionada);
 
-        // Remover seleção anterior
+        // Remover seleção apenas das outras categorias
         botoesCategoria.forEach((item) => {
+            item.classList.remove("selecionada");
+        });
+
+        // Selecionar botão atual
+        botao.classList.add("selecionada");
+    });
+});
+
+// SELECIONAR CAMPUS (Apenas entre os campi, mantendo a categoria intacta)
+botoesCampus.forEach((botao) => {
+    botao.addEventListener("click", () => {
+        campusSelecionado = botao.dataset.campus;
+
+        console.log("Campus:", campusSelecionado);
+
+        // Remover seleção apenas dos outros botões de campus
+        botoesCampus.forEach((item) => {
             item.classList.remove("selecionada");
         });
 
@@ -33,12 +50,15 @@ submitButton.addEventListener("click", abrirChamado);
 
 async function abrirChamado() {
     const sala = document.getElementById("sala").value.trim();
-
     const professor = document.getElementById("professor").value.trim();
-
     const descricao = document.getElementById("description").value.trim();
 
     // VALIDAÇÕES
+    if (!campusSelecionado) {
+        alert("Por favor, selecione um campus.");
+        return;
+    }
+
     if (!categoriaSelecionada) {
         alert("Selecione uma categoria.");
         return;
@@ -64,7 +84,10 @@ async function abrirChamado() {
     submitButton.textContent = "Enviando...";
 
     try {
-        const resposta = await fetch(`${API_URL}/chamados`, {
+        // Define a rota específica para o campus selecionado
+        const endpoint = `${API_URL}/${campusSelecionado}/chamados`;
+
+        const resposta = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -86,7 +109,7 @@ async function abrirChamado() {
         }
 
         // SUCESSO
-        mostrarSucesso(chamado);
+        serverMostrarSucesso(chamado);
 
     } catch (erro) {
         console.error("Erro ao abrir chamado:", erro);
@@ -102,7 +125,7 @@ async function abrirChamado() {
 }
 
 // MOSTRAR MENSAGEM DE SUCESSO
-function mostrarSucesso(chamado) {
+function serverMostrarSucesso(chamado) {
     document.getElementById("modalCategory").textContent =
         chamado.categoria;
 
@@ -117,14 +140,17 @@ newTicketButton.addEventListener("click", () => {
     document.getElementById("successModal").classList.add("hidden");
 
     document.getElementById("sala").value = "";
-
     document.getElementById("professor").value = "";
-
     document.getElementById("description").value = "";
 
     categoriaSelecionada = null;
+    campusSelecionado = null;
 
     botoesCategoria.forEach((botao) => {
+        botao.classList.remove("selecionada");
+    });
+
+    botoesCampus.forEach((botao) => {
         botao.classList.remove("selecionada");
     });
 });

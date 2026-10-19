@@ -5,11 +5,8 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://www.uniensinovirtual.com.br/assets/imgs/logo/logo.png" alt="Logo UniEnsino"">
     <title>Tela do Professor</title>
     <link rel="stylesheet" href="/pag_professor/style.css">
 
@@ -44,6 +41,23 @@
 
 
         <!-- FORMULÁRIO -->
+
+        <!-- CAMPUS -->
+            <div class="form-group">
+               <label>
+                   SELECIONE O SEU CAMPUS POR GENTILEZA
+               </label>
+               <div class="categories">
+               <button type="button" class="campus-btn campus-option" data-campus="neoville">
+               <span class="category-icon">🏫</span>
+               <span>Neoville</span>
+               </button>
+               <button type="button" class="campus-btn campus-option" data-campus="hauer">
+               <span class="category-icon">🏫</span>
+               <span>Hauer</span>
+               </button>
+               </div>
+        </div>
 
         <section class="content">
 
@@ -192,13 +206,14 @@
 
 
                 <textarea
-                    id="sala"
-                    placeholder="Ex: 12 - Digite aqui o número da sua sala"
+                    id="sala"    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    placeholder="Ex: 12 - Digite aqui o número da sua sala" 
                     maxlength="10"
                 ></textarea>
 
 
             </div>
+
 
 
 

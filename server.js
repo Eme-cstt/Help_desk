@@ -5,193 +5,198 @@ const cors = require("cors");
 
 const app = express();
 
-// Render define a porta por variável de ambiente.
-// Localmente, o servidor utilizará a porta 3000.
 const PORT = process.env.PORT || 3000;
 
-// Caminhos do projeto
 const publicDirectory = path.join(__dirname, "public");
 const imagesDirectory = path.join(publicDirectory, "imagens");
-
 const databaseDirectory = path.join(__dirname, "data_base");
-const databasePath = path.join(databaseDirectory, "chamados.json");
 
-// Middlewares
+// Bancos de dados separados por campus
+const dbNeovillePath = path.join(databaseDirectory, "chamados_neoville.json");
+const dbHauerPath = path.join(databaseDirectory, "chamados_hauer.json");
+
 app.use(cors());
 app.use(express.json());
-
-// Frontend: HTML, CSS, JavaScript e demais arquivos públicos
 app.use(express.static(publicDirectory));
-
-// Imagens disponíveis em /imagens/nome-do-arquivo.png
 app.use("/imagens", express.static(imagesDirectory));
 
-// Preparar o arquivo JSON sem apagar dados existentes
-function prepararBanco() {
+// Preparar os arquivos JSON para ambos os campus
+function prepararBancos() {
     if (!fs.existsSync(databaseDirectory)) {
         fs.mkdirSync(databaseDirectory, { recursive: true });
     }
 
-    if (!fs.existsSync(databasePath)) {
-        fs.writeFileSync(databasePath, "[]", "utf8");
-        console.log("Arquivo chamados.json criado.");
+    if (!fs.existsSync(dbNeovillePath)) {
+        fs.writeFileSync(dbNeovillePath, "[]", "utf8");
+    }
+
+    if (!fs.existsSync(dbHauerPath)) {
+        fs.writeFileSync(dbHauerPath, "[]", "utf8");
     }
 }
 
-prepararBanco();
+prepararBancos();
 
-// Página inicial
-app.get("/", (req, res) => {
-    res.sendFile(
-        path.join(publicDirectory, "pag_professor", "index.html")
-    );
-});
-
-// Ler chamados
-function lerChamados() {
-    const dados = fs.readFileSync(databasePath, "utf8");
-
-    if (!dados.trim()) {
-        return [];
-    }
+function lerChamados(campus) {
+    const filePath = campus === "hauer" ? dbHauerPath : dbNeovillePath;
+    if (!fs.existsSync(filePath)) return [];
+    
+    const dados = fs.readFileSync(filePath, "utf8");
+    if (!dados.trim()) return [];
 
     const chamados = JSON.parse(dados);
-
-    if (!Array.isArray(chamados)) {
-        throw new Error("O banco de chamados precisa conter uma lista.");
-    }
-
-    return chamados;
+    return Array.isArray(chamados) ? chamados : [];
 }
 
-// Salvar chamados
-function salvarChamados(chamados) {
-    fs.writeFileSync(
-        databasePath,
-        JSON.stringify(chamados, null, 4),
-        "utf8"
-    );
+function salvarChamados(campus, chamados) {
+    const filePath = campus === "hauer" ? dbHauerPath : dbNeovillePath;
+    fs.writeFileSync(filePath, JSON.stringify(chamados, null, 4), "utf8");
 }
 
-// Verificar se a API está funcionando
-app.get("/api/health", (req, res) => {
-    res.json({
-        status: "ok",
-        mensagem: "Help Desk funcionando."
-    });
-});
-
-// Listar chamados
-app.get("/api/chamados", (req, res) => {
+// Rotas da API para Neoville
+app.get("/api/neoville/chamados", (req, res) => {
     try {
-        res.json(lerChamados());
+        res.json(lerChamados("neoville"));
     } catch (erro) {
-        console.error("Erro ao ler chamados:", erro);
-        res.status(500).json({
-            erro: "Erro ao ler os chamados."
-        });
+        res.status(500).json({ erro: "Erro ao ler chamados do Neoville." });
     }
 });
 
-// Criar chamado
-app.post("/api/chamados", (req, res) => {
+app.post("/api/neoville/chamados", (req, res) => {
     try {
         const { categoria, sala, professor, descricao } = req.body;
-
-        if (
-            !categoria ||
-            !sala ||
-            !professor ||
-            !descricao
-        ) {
-            return res.status(400).json({
-                erro: "Todos os campos são obrigatórios."
-            });
+        if (!categoria || !sala || !professor || !descricao) {
+            return res.status(400).json({ erro: "Todos os campos são obrigatórios." });
         }
-
-        const chamados = lerChamados();
-
-        // Evitar depender da posição do último chamado no arquivo
-        const novoId = chamados.reduce(
-            (maiorId, chamado) => Math.max(maiorId, Number(chamado.id) || 0),
-            0
-        ) + 1;
-
-        const novoChamado = {
-            id: novoId,
-            categoria,
-            sala,
-            professor,
-            descricao,
-            status: "Aberto",
-            createdAt: new Date().toISOString()
-        };
-
+        const chamados = lerChamados("neoville");
+        const novoId = chamados.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+        const novoChamado = { id: novoId, categoria, sala, professor, descricao, status: "Aberto", createdAt: new Date().toISOString() };
+        
         chamados.push(novoChamado);
-        salvarChamados(chamados);
-
+        salvarChamados("neoville", chamados);
         res.status(201).json(novoChamado);
     } catch (erro) {
-        console.error("Erro ao criar chamado:", erro);
-        res.status(500).json({
-            erro: "Erro ao criar chamado."
-        });
+        res.status(500).json({ erro: "Erro ao criar chamado." });
     }
 });
 
-// Atualizar status do chamado
-app.put("/api/chamados/:id", (req, res) => {
+app.put("/api/neoville/chamados/:id", (req, res) => {
     try {
         const id = Number(req.params.id);
         const { status } = req.body;
-
-        if (!Number.isInteger(id) || id <= 0) {
-            return res.status(400).json({
-                erro: "ID do chamado inválido."
-            });
-        }
-
-        if (typeof status !== "string" || !status.trim()) {
-            return res.status(400).json({
-                erro: "O campo status é obrigatório."
-            });
-        }
-
-        const chamados = lerChamados();
-        const index = chamados.findIndex(
-            chamado => Number(chamado.id) === id
-        );
-
-        if (index === -1) {
-            return res.status(404).json({
-                erro: "Chamado não encontrado."
-            });
-        }
+        const chamados = lerChamados("neoville");
+        const index = chamados.findIndex(c => Number(c.id) === id);
+        if (index === -1) return res.status(404).json({ erro: "Chamado não encontrado." });
 
         chamados[index].status = status.trim();
-        salvarChamados(chamados);
-
-        res.json({
-            mensagem: "Status atualizado com sucesso!",
-            chamado: chamados[index]
-        });
+        salvarChamados("neoville", chamados);
+        res.json({ mensagem: "Status atualizado com sucesso!", chamado: chamados[index] });
     } catch (erro) {
-        console.error("Erro ao atualizar status:", erro);
-        res.status(500).json({
-            erro: "Erro ao atualizar status do chamado."
-        });
+        res.status(500).json({ erro: "Erro ao atualizar status." });
     }
 });
 
-// Rota não encontrada
-app.use((req, res) => {
-    res.status(404).json({
-        erro: "Rota não encontrada."
-    });
+app.get("/api/neoville/relatorios", (req, res) => {
+    try {
+        const { tipo } = req.query;
+        const chamados = lerChamados("neoville");
+        gerarDadosRelatorio(tipo, chamados, res);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao gerar relatório." });
+    }
 });
 
-// Inicializar o servidor uma única vez
+// Rotas da API para Hauer
+app.get("/api/hauer/chamados", (req, res) => {
+    try {
+        res.json(lerChamados("hauer"));
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao ler chamados do Hauer." });
+    }
+});
+
+app.post("/api/hauer/chamados", (req, res) => {
+    try {
+        const { categoria, sala, professor, descricao } = req.body;
+        if (!categoria || !sala || !professor || !descricao) {
+            return res.status(400).json({ erro: "Todos os campos são obrigatórios." });
+        }
+        const chamados = lerChamados("hauer");
+        const novoId = chamados.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+        const novoChamado = { id: novoId, categoria, sala, professor, descricao, status: "Aberto", createdAt: new Date().toISOString() };
+        
+        chamados.push(novoChamado);
+        salvarChamados("hauer", chamados);
+        res.status(201).json(novoChamado);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao criar chamado." });
+    }
+});
+
+app.put("/api/hauer/chamados/:id", (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const { status } = req.body;
+        const chamados = lerChamados("hauer");
+        const index = chamados.findIndex(c => Number(c.id) === id);
+        if (index === -1) return res.status(404).json({ erro: "Chamado não encontrado." });
+
+        chamados[index].status = status.trim();
+        salvarChamados("hauer", chamados);
+        res.json({ mensagem: "Status atualizado com sucesso!", chamado: chamados[index] });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao atualizar status." });
+    }
+});
+
+app.get("/api/hauer/relatorios", (req, res) => {
+    try {
+        const { tipo } = req.query;
+        const chamados = lerChamados("hauer");
+        gerarDadosRelatorio(tipo, chamados, res);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao gerar relatório." });
+    }
+});
+
+// Função auxiliar para estruturar relatórios
+function gerarDadosRelatorio(tipo, chamados, res) {
+    const agora = new Date();
+    const chamadosFiltrados = chamados.filter(chamado => {
+        if (!chamado.createdAt) return false;
+        const dataChamado = new Date(chamado.createdAt);
+        if (tipo === "diario") {
+            return dataChamado.getDate() === agora.getDate() &&
+                   dataChamado.getMonth() === agora.getMonth() &&
+                   dataChamado.getFullYear() === agora.getFullYear();
+        } else if (tipo === "semanal") {
+            const umaSemanaAtras = new Date();
+            umaSemanaAtras.setDate(agora.getDate() - 7);
+            return dataChamado >= umaSemanaAtras && dataChamado <= agora;
+        } else if (tipo === "mensal") {
+            return dataChamado.getMonth() === agora.getMonth() &&
+                   dataChamado.getFullYear() === agora.getFullYear();
+        }
+        return true;
+    });
+
+    const total = chamadosFiltrados.length;
+    const abertos = chamadosFiltrados.filter(c => c.status === "Aberto").length;
+    const concluidos = total - abertos;
+
+    res.json({
+        tipo: tipo || "geral",
+        totalChamados: total,
+        chamadosAbertos: abertos,
+        chamadosConcluidos: concluidos,
+        dados: chamadosFiltrados
+    });
+}
+
+app.use((req, res) => {
+    res.status(404).json({ erro: "Rota não encontrada." });
+});
+
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Help Desk iniciado na porta ${PORT}`);
-    console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
+    console.log(`Help Desk multi-campus iniciado na porta ${PORT}`);
 });

@@ -1,0 +1,11 @@
+[
+    {
+        "id": 1,
+        "categoria": "Projetor",
+        "sala": "12",
+        "professor": "teste",
+        "descricao": "teste",
+        "status": "Aberto",
+        "createdAt": "2026-10-19T16:09:12.925Z"
+    }
+]
